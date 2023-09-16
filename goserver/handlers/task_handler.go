@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/firhan200/taktodoi/goserver/data"
+	"github.com/firhan200/taktodoi/goserver/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,7 +20,12 @@ func NewTaskHandler(td *data.TaskData) *TaskHandler {
 
 func (th *TaskHandler) GetAll() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		return nil
+		claim, err := utils.ExtrackToken(c)
+		if err != nil {
+			return err
+		}
+
+		return c.Status(http.StatusOK).JSON(claim)
 	}
 }
 

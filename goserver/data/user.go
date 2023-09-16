@@ -7,11 +7,13 @@ import (
 )
 
 type UserDB interface {
+	Debug() (tx *gorm.DB)
 	Create(value interface{}) (tx *gorm.DB)
 	Find(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 	First(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 	Save(value interface{}) (tx *gorm.DB)
 	Delete(value interface{}, conds ...interface{}) (tx *gorm.DB)
+	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
 }
 
 type UserData struct {
@@ -44,4 +46,35 @@ func (u *UserData) Insert(fullName string, email string, password string) (creat
 	createdId = int(user.Model.ID)
 
 	return createdId, nil
+}
+
+func (u *UserData) GetByEmail(email string) (User, error) {
+	var user User
+
+	res := u.db.Where(&User{
+		Email: email,
+	}).First(&user)
+
+	if res.RowsAffected == 0 {
+		err := errors.New("user not found")
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (u *UserData) GetByEmailAndPassword(email string, pass string) (User, error) {
+	var user User
+
+	res := u.db.Where(&User{
+		Email:    email,
+		Password: pass,
+	}).First(&user)
+
+	if res.RowsAffected == 0 {
+		err := errors.New("user not found")
+		return user, err
+	}
+
+	return user, nil
 }
