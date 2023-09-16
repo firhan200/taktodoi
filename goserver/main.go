@@ -11,8 +11,13 @@ func main() {
 	db.Migrate()
 	taskData := data.NewTask(db.Conn)
 	taskHandler := handlers.NewTaskHandler(taskData)
+	userData := data.NewUser(db.Conn)
+	userHandler := handlers.NewUserHandler(userData)
 
 	app := fiber.New()
+
+	auth := app.Group("/auth")
+	auth.Post("/register", userHandler.Register())
 
 	tasks := app.Group("/tasks")
 	tasks.Get("/", taskHandler.GetAll())
