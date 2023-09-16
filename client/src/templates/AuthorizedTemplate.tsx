@@ -1,7 +1,7 @@
-import { Container } from "@radix-ui/themes";
 import { Suspense, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { Container } from "@radix-ui/themes";
 
 export default function AuthorizedTemplate() {
 	const { isAuth } = useAuth()
@@ -10,7 +10,7 @@ export default function AuthorizedTemplate() {
 	console.log(isAuth)
 
 	useEffect(() => {
-		if(!isAuth){
+		if (!isAuth) {
 			navigate("/login")
 		}
 	}, [isAuth])

@@ -1,7 +1,6 @@
 import React, { lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import '@radix-ui/themes/styles.css';
-import './index.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import UnauthorizedTemplate from './templates/UnauthorizedTemplate';
 import AuthorizedTemplate from './templates/AuthorizedTemplate';

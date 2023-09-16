@@ -1,7 +1,6 @@
 import { Suspense, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Container } from "@radix-ui/themes";
 
 export default function UnauthorizedTemplate() {
 	const { isAuth } = useAuth()
@@ -14,10 +13,8 @@ export default function UnauthorizedTemplate() {
 	}, [isAuth])
 
 	return (
-		<Container>
-			<Suspense fallback="Loading...">
-				<Outlet />
-			</Suspense>
-		</Container>
+		<Suspense fallback="Loading...">
+			<Outlet />
+		</Suspense>
 	)
 }
