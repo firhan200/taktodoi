@@ -13,30 +13,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisCache struct {
-	Client *redis.Client
+type Redis interface {
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
 }
 
-var (
-	redisCache *RedisCache
-)
+type RedisCache struct {
+	Client Redis
+}
 
-func NewRedisCache() *RedisCache {
-	if redisCache != nil {
-		return redisCache
+func NewRedisCache(r Redis) *RedisCache {
+	return &RedisCache{
+		Client: r,
 	}
-
-	c := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	redisCache = &RedisCache{
-		Client: c,
-	}
-
-	return redisCache
 }
 
 func (rc *RedisCache) SetLastIndexRead(offset int) {

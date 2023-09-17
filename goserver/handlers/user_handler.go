@@ -4,29 +4,30 @@ import (
 	"net/http"
 
 	"github.com/firhan200/taktodoi/goserver/data"
+	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/firhan200/taktodoi/goserver/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-type UserHandler struct {
-	userData *data.UserData
+type IUserData interface {
+	GetByEmail(email string) (data.User, error)
+	Insert(fullName string, email string, password string) (createdId int, err error)
+	GetByEmailAndPassword(email string, pass string) (data.User, error)
 }
 
-func NewUserHandler(ud *data.UserData) *UserHandler {
+type UserHandler struct {
+	userData IUserData
+}
+
+func NewUserHandler(ud IUserData) *UserHandler {
 	return &UserHandler{
 		userData: ud,
 	}
 }
 
 func (uh *UserHandler) Register() fiber.Handler {
-	type RegisterDto struct {
-		FullName string `json:"full_name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
 	return func(c *fiber.Ctx) error {
-		var registerDto RegisterDto
+		var registerDto dto.RegisterDto
 		if err := c.BodyParser(&registerDto); err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
@@ -87,13 +88,8 @@ func (uh *UserHandler) Register() fiber.Handler {
 }
 
 func (uh *UserHandler) Login() fiber.Handler {
-	type LoginDto struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
 	return func(c *fiber.Ctx) error {
-		var loginDto LoginDto
+		var loginDto dto.LoginDto
 		if err := c.BodyParser(&loginDto); err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),

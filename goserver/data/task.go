@@ -23,8 +23,8 @@ type TaskData struct {
 	cache *cache.RedisCache
 }
 
-func NewTask(db TaskDB) *TaskData {
-	client := cache.NewRedisCache()
+func NewTask(db TaskDB, r cache.Redis) *TaskData {
+	client := cache.NewRedisCache(r)
 
 	return &TaskData{
 		db:    db,

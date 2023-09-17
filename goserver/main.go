@@ -8,6 +8,7 @@ import (
 	"github.com/firhan200/taktodoi/goserver/middlewares"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -23,9 +24,15 @@ func main() {
 	//create producer
 	//tp := publisher.NewTaskPublisher()
 
+	redis := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
 	db := data.NewDB()
 	db.Migrate()
-	taskData := data.NewTask(db.Conn)
+	taskData := data.NewTask(db.Conn, redis)
 	taskHandler := handlers.NewTaskHandler(taskData)
 	userData := data.NewUser(db.Conn)
 	userHandler := handlers.NewUserHandler(userData)

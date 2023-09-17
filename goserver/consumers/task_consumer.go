@@ -13,8 +13,8 @@ type TaskConsumer struct {
 	cache  *cache.RedisCache
 }
 
-func NewTaskConsumer() *TaskConsumer {
-	client := cache.NewRedisCache()
+func NewTaskConsumer(redis cache.Redis) *TaskConsumer {
+	client := cache.NewRedisCache(redis)
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:29092"},
