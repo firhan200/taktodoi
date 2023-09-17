@@ -33,9 +33,20 @@ func NewTask(db TaskDB) *TaskData {
 func (t *TaskData) GetByUserId(userId int) ([]Task, error) {
 	tasks := make([]Task, 0)
 
-	t.db.Where(&Task{
-		UserId: userId,
-	}).Find(&tasks)
+	// t.db.Where(&Task{
+	// 	UserId: userId,
+	// }).Find(&tasks)
+
+	cachedTasks := t.cache.GetTasks(userId)
+	for _, task := range cachedTasks {
+		tasks = append(tasks, Task{
+			Model: gorm.Model{
+				ID: uint(task.Id),
+			},
+			Name:        task.Name,
+			Description: task.Description,
+		})
+	}
 
 	return tasks, nil
 }
@@ -58,6 +69,13 @@ func (t *TaskData) Insert(userId int, name string, description string) (createdI
 	}
 
 	createdId = int(task.Model.ID)
+
+	// t.cache.SaveTasks(dto.CreatedTask{
+	// 	Id:          1,
+	// 	UserId:      userId,
+	// 	Name:        name,
+	// 	Description: description,
+	// })
 
 	return createdId, nil
 }

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -38,9 +39,11 @@ func NewRedisCache() *RedisCache {
 func (rc *RedisCache) SaveTasks(data dto.CreatedTask) error {
 	key := fmt.Sprintf("tasks:%d", data.UserId)
 
-	err := rc.Client.LPush(context.Background(), key, data.Name, 0).Err()
+	jsonBody, _ := json.Marshal(data)
+
+	err := rc.Client.LPush(context.Background(), key, jsonBody, 0).Err()
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("failed save to cache: %s\n", err.Error())
 		return err
 	}
 
@@ -58,10 +61,14 @@ func (rc *RedisCache) GetTasks(userId int) []dto.CreatedTask {
 	}
 
 	tasks := make([]dto.CreatedTask, 0)
-	for _, task := range res {
-		tasks = append(tasks, dto.CreatedTask{
-			Name: task,
-		})
+	for _, body := range res {
+		var task dto.CreatedTask
+		err := json.Unmarshal([]byte(body), &task)
+		if err != nil {
+			continue
+		}
+
+		tasks = append(tasks, task)
 	}
 
 	return tasks

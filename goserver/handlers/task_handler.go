@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/firhan200/taktodoi/goserver/data"
+	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/firhan200/taktodoi/goserver/publisher"
 	"github.com/firhan200/taktodoi/goserver/utils"
 	"github.com/gofiber/fiber/v2"
@@ -84,12 +85,12 @@ func (th *TaskHandler) Create() fiber.Handler {
 		}
 
 		//send to queue
-		// th.taskPublisher.Publish(&dto.CreatedTask{
-		// 	Id:          taskId,
-		// 	UserId:      claim.Id,
-		// 	Name:        createTaskDto.Name,
-		// 	Description: createTaskDto.Description,
-		// })
+		th.taskPublisher.Publish(&dto.CreatedTask{
+			Id:          taskId,
+			UserId:      claim.Id,
+			Name:        createTaskDto.Name,
+			Description: createTaskDto.Description,
+		})
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"created_id": taskId,

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/firhan200/taktodoi/goserver/consumers"
 	"github.com/firhan200/taktodoi/goserver/data"
 	"github.com/firhan200/taktodoi/goserver/handlers"
 	"github.com/firhan200/taktodoi/goserver/middlewares"
@@ -18,8 +19,8 @@ func main() {
 	}
 
 	//create consumer
-	//tc := consumers.NewTaskConsumer()
-	//go tc.Consume()
+	tc := consumers.NewTaskConsumer()
+	go tc.Consume()
 
 	//create producer
 	tp := publisher.NewTaskPublisher()
