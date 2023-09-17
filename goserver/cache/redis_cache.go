@@ -3,9 +3,11 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/redis/go-redis/v9"
@@ -58,52 +60,47 @@ func (rc *RedisCache) GetOffset() int {
 	return offset
 }
 
-func (rc *RedisCache) SaveTasks(data dto.CreatedTask) error {
-	key := fmt.Sprintf("tasks:%d", data.UserId)
+func (rc *RedisCache) SaveTasks(userId int, data []dto.Task) error {
+	key := fmt.Sprintf("tasks:%d", userId)
 
 	jsonBody, _ := json.Marshal(data)
 
-	err := rc.Client.LPush(context.Background(), key, jsonBody, 0).Err()
+	err := rc.Client.Set(context.Background(), key, jsonBody, time.Duration(time.Hour*1)).Err()
 	if err != nil {
 		log.Printf("failed save to cache: %s\n", err.Error())
 		return err
 	}
 
-	log.Printf("saving task into cache %s=%+v", key, data)
+	log.Printf("saving tasks into cache %s=%+v", key, data)
 
 	return nil
 }
 
-func (rc *RedisCache) GetTasks(userId int) []dto.CreatedTask {
+func (rc *RedisCache) GetTasks(userId int) ([]dto.Task, error) {
+	var tasks []dto.Task
+
 	key := fmt.Sprintf("tasks:%d", userId)
 
-	res, err := rc.Client.LRange(context.Background(), key, 0, 500).Result()
+	res, err := rc.Client.Get(context.Background(), key).Result()
+	if err == redis.Nil {
+		return tasks, errors.New("key did not exist")
+	}
+
+	parseErr := json.Unmarshal([]byte(res), &tasks)
+	if parseErr != nil {
+		return tasks, parseErr
+	}
+
+	return tasks, nil
+}
+
+func (rc *RedisCache) DeleteTasks(userId int) error {
+	key := fmt.Sprintf("tasks:%d", userId)
+
+	err := rc.Client.Del(context.Background(), key).Err()
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 
-	tasks := make([]dto.CreatedTask, 0)
-	for _, body := range res {
-		var task dto.CreatedTask
-		err := json.Unmarshal([]byte(body), &task)
-		if err != nil {
-			continue
-		}
-
-		//check if already exist
-		found := false
-		for _, cachedTask := range tasks {
-			if cachedTask.Id == task.Id {
-				found = true
-				break
-			}
-		}
-
-		//insert into cache
-		if !found {
-			tasks = append(tasks, task)
-		}
-	}
-
-	return tasks
+	return nil
 }

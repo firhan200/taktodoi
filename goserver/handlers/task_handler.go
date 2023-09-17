@@ -2,35 +2,25 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/firhan200/taktodoi/goserver/data"
-	"github.com/firhan200/taktodoi/goserver/dto"
-	"github.com/firhan200/taktodoi/goserver/publisher"
 	"github.com/firhan200/taktodoi/goserver/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 type TaskHandler struct {
-	taskData      *data.TaskData
-	taskPublisher *publisher.TaskPublisher
+	taskData *data.TaskData
+	//taskPublisher *publisher.TaskPublisher
 }
 
-func NewTaskHandler(td *data.TaskData, tp *publisher.TaskPublisher) *TaskHandler {
+func NewTaskHandler(td *data.TaskData) *TaskHandler {
 	return &TaskHandler{
-		taskData:      td,
-		taskPublisher: tp,
+		taskData: td,
+		//taskPublisher: tp,
 	}
 }
 
 func (th *TaskHandler) GetAll() fiber.Handler {
-	type TaskDto struct {
-		Id          int       `json:"id"`
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		CreatedAt   time.Time `json:"created_at"`
-	}
-
 	return func(c *fiber.Ctx) error {
 		claim, err := utils.ExtrackToken(c)
 		if err != nil {
@@ -44,17 +34,7 @@ func (th *TaskHandler) GetAll() fiber.Handler {
 			})
 		}
 
-		tasksDto := make([]TaskDto, 0)
-		for _, task := range tasks {
-			tasksDto = append(tasksDto, TaskDto{
-				Id:          int(task.ID),
-				Name:        task.Name,
-				Description: task.Description,
-				CreatedAt:   task.CreatedAt,
-			})
-		}
-
-		return c.Status(http.StatusOK).JSON(tasksDto)
+		return c.Status(http.StatusOK).JSON(tasks)
 	}
 }
 
@@ -85,12 +65,12 @@ func (th *TaskHandler) Create() fiber.Handler {
 		}
 
 		//send to queue
-		th.taskPublisher.Publish(&dto.CreatedTask{
-			Id:          taskId,
-			UserId:      claim.Id,
-			Name:        createTaskDto.Name,
-			Description: createTaskDto.Description,
-		})
+		// th.taskPublisher.Publish(&dto.Task{
+		// 	Id:          taskId,
+		// 	UserId:      claim.Id,
+		// 	Name:        createTaskDto.Name,
+		// 	Description: createTaskDto.Description,
+		// })
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"created_id": taskId,

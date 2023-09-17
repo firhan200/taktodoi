@@ -2,13 +2,9 @@ package consumers
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/firhan200/taktodoi/goserver/cache"
-	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -59,20 +55,20 @@ func (tc *TaskConsumer) Consume() {
 }
 
 func (tc *TaskConsumer) saveToCache(m kafka.Message) error {
-	var (
-		createdTask dto.CreatedTask
-	)
-	err := json.Unmarshal(m.Value, &createdTask)
-	if err != nil {
-		msg := fmt.Sprintf("error when consuming message: %s\n", m.Value)
-		return errors.New(msg)
-	}
+	// var (
+	// 	createdTask dto.Task
+	// )
+	// err := json.Unmarshal(m.Value, &createdTask)
+	// if err != nil {
+	// 	msg := fmt.Sprintf("error when consuming message: %s\n", m.Value)
+	// 	return errors.New(msg)
+	// }
 
-	//save to redis
-	cacheErr := tc.cache.SaveTasks(createdTask)
-	if cacheErr != nil {
-		return cacheErr
-	}
+	// //save to redis
+	// cacheErr, _ := tc.cache.SaveTasks(createdTask)
+	// if cacheErr != nil {
+	// 	return cacheErr
+	// }
 
 	return nil
 }

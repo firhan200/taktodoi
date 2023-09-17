@@ -3,11 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/firhan200/taktodoi/goserver/consumers"
 	"github.com/firhan200/taktodoi/goserver/data"
 	"github.com/firhan200/taktodoi/goserver/handlers"
 	"github.com/firhan200/taktodoi/goserver/middlewares"
-	"github.com/firhan200/taktodoi/goserver/publisher"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
@@ -19,16 +17,16 @@ func main() {
 	}
 
 	//create consumer
-	tc := consumers.NewTaskConsumer()
-	go tc.Consume()
+	//tc := consumers.NewTaskConsumer()
+	//go tc.Consume()
 
 	//create producer
-	tp := publisher.NewTaskPublisher()
+	//tp := publisher.NewTaskPublisher()
 
 	db := data.NewDB()
 	db.Migrate()
 	taskData := data.NewTask(db.Conn)
-	taskHandler := handlers.NewTaskHandler(taskData, tp)
+	taskHandler := handlers.NewTaskHandler(taskData)
 	userData := data.NewUser(db.Conn)
 	userHandler := handlers.NewUserHandler(userData)
 	authMiddleware := middlewares.NewAuthMiddleware()
@@ -42,8 +40,8 @@ func main() {
 	tasks := app.Group("/tasks", authMiddleware.Verify())
 	tasks.Get("/", taskHandler.GetAll())
 	tasks.Post("/", taskHandler.Create())
-	tasks.Patch("/", taskHandler.Update())
-	tasks.Delete("/", taskHandler.Delete())
+	tasks.Patch("/:id", taskHandler.Update())
+	tasks.Delete("/:id", taskHandler.Delete())
 
 	app.Listen(":8080")
 }

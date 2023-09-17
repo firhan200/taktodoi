@@ -29,7 +29,7 @@ func NewTaskPublisher() *TaskPublisher {
 	}
 }
 
-func (p *TaskPublisher) Publish(message *dto.CreatedTask) error {
+func (p *TaskPublisher) Publish(message *dto.Task) error {
 	//serialize message
 	body, jErr := json.Marshal(message)
 	if jErr != nil {
