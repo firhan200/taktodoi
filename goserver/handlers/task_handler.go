@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -85,7 +84,12 @@ func (th *TaskHandler) Create() fiber.Handler {
 		}
 
 		//send to queue
-		th.taskPublisher.Publish(fmt.Sprintf("new task created: %d", taskId))
+		// th.taskPublisher.Publish(&dto.CreatedTask{
+		// 	Id:          taskId,
+		// 	UserId:      claim.Id,
+		// 	Name:        createTaskDto.Name,
+		// 	Description: createTaskDto.Description,
+		// })
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"created_id": taskId,

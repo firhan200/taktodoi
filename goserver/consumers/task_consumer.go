@@ -2,17 +2,24 @@ package consumers
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
+	"github.com/firhan200/taktodoi/goserver/cache"
+	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/segmentio/kafka-go"
 )
 
 type TaskConsumer struct {
 	reader *kafka.Reader
+	cache  *cache.RedisCache
 }
 
 func NewTaskConsumer() *TaskConsumer {
+	client := cache.NewRedisCache()
+
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:29092"},
 		Topic:     "task-topic",
@@ -22,6 +29,7 @@ func NewTaskConsumer() *TaskConsumer {
 
 	return &TaskConsumer{
 		reader: r,
+		cache:  client,
 	}
 }
 
@@ -31,10 +39,33 @@ func (tc *TaskConsumer) Consume() {
 		if err != nil {
 			break
 		}
-		fmt.Printf("message %s = %s\n", string(m.Key), string(m.Value))
+
+		saveErr := tc.saveToCache(m)
+		if saveErr != nil {
+			log.Println(saveErr.Error())
+		}
 	}
 
 	if err := tc.reader.Close(); err != nil {
 		log.Fatal("failed to close reader:", err)
 	}
+}
+
+func (tc *TaskConsumer) saveToCache(m kafka.Message) error {
+	var (
+		createdTask dto.CreatedTask
+	)
+	err := json.Unmarshal(m.Value, &createdTask)
+	if err != nil {
+		msg := fmt.Sprintf("error when consuming message: %s\n", m.Value)
+		return errors.New(msg)
+	}
+
+	//save to redis
+	cacheErr := tc.cache.SaveTasks(createdTask)
+	if cacheErr != nil {
+		return cacheErr
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 
+	"github.com/firhan200/taktodoi/goserver/cache"
 	"gorm.io/gorm"
 )
 
@@ -16,23 +17,27 @@ type TaskDB interface {
 }
 
 type TaskData struct {
-	db TaskDB
+	db    TaskDB
+	cache *cache.RedisCache
 }
 
 func NewTask(db TaskDB) *TaskData {
+	client := cache.NewRedisCache()
+
 	return &TaskData{
-		db: db,
+		db:    db,
+		cache: client,
 	}
 }
 
 func (t *TaskData) GetByUserId(userId int) ([]Task, error) {
-	var tasks []Task
+	tasks := make([]Task, 0)
 
-	res := t.db.Where(&Task{
+	t.db.Where(&Task{
 		UserId: userId,
 	}).Find(&tasks)
 
-	return tasks, res.Error
+	return tasks, nil
 }
 
 func (t *TaskData) Insert(userId int, name string, description string) (createdId int, err error) {

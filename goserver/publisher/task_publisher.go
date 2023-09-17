@@ -2,9 +2,11 @@ package publisher
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
+	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -27,18 +29,22 @@ func NewTaskPublisher() *TaskPublisher {
 	}
 }
 
-func (p *TaskPublisher) Publish(message string) {
+func (p *TaskPublisher) Publish(message *dto.CreatedTask) error {
+	//serialize message
+	body, jErr := json.Marshal(message)
+	if jErr != nil {
+		return jErr
+	}
+
 	p.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	_, err := p.conn.WriteMessages(
-		kafka.Message{Value: []byte(message)},
+		kafka.Message{Value: body},
 	)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)
 	}
 
-	if err := p.conn.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
-	}
+	log.Printf("message published: %+v\n", message)
 
-	log.Printf("message published: %s\n", message)
+	return nil
 }
