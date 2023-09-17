@@ -12,6 +12,7 @@ type TaskDB interface {
 	First(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 	Save(value interface{}) (tx *gorm.DB)
 	Delete(value interface{}, conds ...interface{}) (tx *gorm.DB)
+	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
 }
 
 type TaskData struct {
@@ -22,6 +23,16 @@ func NewTask(db TaskDB) *TaskData {
 	return &TaskData{
 		db: db,
 	}
+}
+
+func (t *TaskData) GetByUserId(userId int) ([]Task, error) {
+	var tasks []Task
+
+	res := t.db.Where(&Task{
+		UserId: userId,
+	}).Find(&tasks)
+
+	return tasks, res.Error
 }
 
 func (t *TaskData) Insert(userId int, name string, description string) (createdId int, err error) {
@@ -44,4 +55,58 @@ func (t *TaskData) Insert(userId int, name string, description string) (createdI
 	createdId = int(task.Model.ID)
 
 	return createdId, nil
+}
+
+func (t *TaskData) Update(id int, userId int, name string, description string) error {
+	var task Task
+
+	res := t.db.First(&task, id)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	//check if authorize
+	if task.UserId != userId {
+		return errors.New("unauthorized actions")
+	}
+
+	task.Name = name
+	task.Description = description
+
+	savedRes := t.db.Save(task)
+
+	if savedRes.Error != nil {
+		return savedRes.Error
+	}
+
+	if savedRes.RowsAffected == 0 {
+		return errors.New("failed to update task")
+	}
+
+	return nil
+}
+
+func (t *TaskData) Delete(id int, userId int) error {
+	var task Task
+
+	res := t.db.First(&task, id)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	//check if authorize
+	if task.UserId != userId {
+		return errors.New("unauthorized actions")
+	}
+
+	deleteRes := t.db.Delete(&task)
+	if deleteRes.Error != nil {
+		return deleteRes.Error
+	}
+
+	if deleteRes.RowsAffected == 0 {
+		return errors.New("failed to delete task")
+	}
+
+	return nil
 }

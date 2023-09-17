@@ -62,15 +62,26 @@ func (uh *UserHandler) Register() fiber.Handler {
 		p := utils.NewPassword(registerDto.Password)
 		hashedPassword := p.Encrypt()
 
-		taskId, err := uh.userData.Insert(registerDto.FullName, registerDto.Email, hashedPassword)
+		userId, err := uh.userData.Insert(registerDto.FullName, registerDto.Email, hashedPassword)
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 
+		//generate jwt
+		jwt := utils.NewJwtAuth(&utils.JwtAuthClaims{
+			Id: int(userId),
+		})
+		token, err := jwt.Generate()
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"errors": err.Error(),
+			})
+		}
+
 		return c.Status(http.StatusOK).JSON(fiber.Map{
-			"created_id": taskId,
+			"token": token,
 		})
 	}
 }
