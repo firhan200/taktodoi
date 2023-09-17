@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/firhan200/taktodoi/goserver/dto"
 	"github.com/redis/go-redis/v9"
@@ -34,6 +35,27 @@ func NewRedisCache() *RedisCache {
 	}
 
 	return redisCache
+}
+
+func (rc *RedisCache) SetLastIndexRead(offset int) {
+	err := rc.Client.Set(context.Background(), "kafka_offset", offset, 0).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (rc *RedisCache) GetOffset() int {
+	o, err := rc.Client.Get(context.Background(), "kafka_offset").Result()
+	if err != nil {
+		log.Fatal(err)
+		return 0
+	}
+
+	log.Printf("found offset on: %s", o)
+
+	offset, _ := strconv.Atoi(o)
+
+	return offset
 }
 
 func (rc *RedisCache) SaveTasks(data dto.CreatedTask) error {
@@ -68,7 +90,19 @@ func (rc *RedisCache) GetTasks(userId int) []dto.CreatedTask {
 			continue
 		}
 
-		tasks = append(tasks, task)
+		//check if already exist
+		found := false
+		for _, cachedTask := range tasks {
+			if cachedTask.Id == task.Id {
+				found = true
+				break
+			}
+		}
+
+		//insert into cache
+		if !found {
+			tasks = append(tasks, task)
+		}
 	}
 
 	return tasks

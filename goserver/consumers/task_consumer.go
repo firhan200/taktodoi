@@ -26,6 +26,7 @@ func NewTaskConsumer() *TaskConsumer {
 		Partition: 0,
 		MaxBytes:  10e6, // 10MB
 	})
+	r.SetOffset(int64(client.GetOffset()))
 
 	return &TaskConsumer{
 		reader: r,
@@ -40,10 +41,16 @@ func (tc *TaskConsumer) Consume() {
 			break
 		}
 
+		log.Printf("receive message: %+v", m.Value)
+
 		saveErr := tc.saveToCache(m)
+
 		if saveErr != nil {
 			log.Println(saveErr.Error())
 		}
+
+		//set offset
+		tc.cache.SetLastIndexRead(int(tc.reader.Offset()))
 	}
 
 	if err := tc.reader.Close(); err != nil {
