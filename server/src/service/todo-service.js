@@ -114,7 +114,7 @@ const remove = async (userId, toDoId) => {
   });
 
   if (totalToDoInDatabase !== 1) {
-    throw new ResponseError(404, "Todo is not found");
+    throw new ResponseError(404, "ToDo is not found");
   }
 
   return prismaClient.toDo.delete({
