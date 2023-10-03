@@ -1,7 +1,13 @@
 import { Text } from "@radix-ui/themes";
 
-export default function TodoDate({date}: {date: string}){
+type TodoDateTypes = {
+	date: Date
+}
+
+export default function TodoDate(props: TodoDateTypes){
+	const { date } = props
+
 	return (
-		<Text as="div" role="todo-date">{ date }</Text>
+		<Text as="div" role="todo-date">{ date.toDateString() }</Text>
 	)
 }

@@ -16,7 +16,7 @@ export default function TodoCard({ todo }: { todo: Todo }) {
 					<TodoTitle title={ Name }/>
 					<TodoDescription description={ Description }/>
 				</Box>
-				<TodoDate date="2 minutes ago"/>
+				<TodoDate date={new Date()}/>
 				<Flex gap="3" justify="end">
 					<IconButton variant="soft">
 						<MagnifyingGlassIcon width="18" height="18" />
